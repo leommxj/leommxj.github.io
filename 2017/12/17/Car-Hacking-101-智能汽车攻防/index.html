@@ -1,0 +1,734 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Sec,智能汽车攻防,CAN,Car hacking," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="智能汽车攻防，(除去对PKE、RKE等的hacking只考虑控制车身系统)个人认为可以分为两个阶段。第一阶段是寻找如何接入CAN总线，第二阶段是CAN总线上的数据分析与攻击。第一阶段的研究基本要靠车型本身信息系统的漏洞，比如未将多媒体系统与舒适can隔离，条件所限难以研究。第二阶段上手较为简单，本文主要集中在第二阶段。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Car Hacking 101/智能汽车攻防">
+<meta property="og:url" content="http://www.leommxj.com/2017/12/17/Car-Hacking-101-智能汽车攻防/index.html">
+<meta property="og:site_name" content="Stop Here">
+<meta property="og:description" content="智能汽车攻防，(除去对PKE、RKE等的hacking只考虑控制车身系统)个人认为可以分为两个阶段。第一阶段是寻找如何接入CAN总线，第二阶段是CAN总线上的数据分析与攻击。第一阶段的研究基本要靠车型本身信息系统的漏洞，比如未将多媒体系统与舒适can隔离，条件所限难以研究。第二阶段上手较为简单，本文主要集中在第二阶段。">
+<meta property="og:updated_time" content="2017-12-18T13:30:19.680Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Car Hacking 101/智能汽车攻防">
+<meta name="twitter:description" content="智能汽车攻防，(除去对PKE、RKE等的hacking只考虑控制车身系统)个人认为可以分为两个阶段。第一阶段是寻找如何接入CAN总线，第二阶段是CAN总线上的数据分析与攻击。第一阶段的研究基本要靠车型本身信息系统的漏洞，比如未将多媒体系统与舒适can隔离，条件所限难以研究。第二阶段上手较为简单，本文主要集中在第二阶段。">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title> Car Hacking 101/智能汽车攻防 | Stop Here </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?506d4068ac30a997f544c02d629de531";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Stop Here</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">And FxxkOff</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Car Hacking 101/智能汽车攻防
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-12-17T23:46:52+08:00" content="2017-12-17">
+              2017-12-17
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/Sec/" itemprop="url" rel="index">
+                    <span itemprop="name">Sec</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>智能汽车攻防，(除去对PKE、RKE等的hacking只考虑控制车身系统)个人认为可以分为两个阶段。第一阶段是寻找如何接入CAN总线，第二阶段是CAN总线上的数据分析与攻击。第一阶段的研究基本要靠车型本身信息系统的漏洞，比如未将多媒体系统与舒适can隔离，条件所限难以研究。第二阶段上手较为简单，本文主要集中在第二阶段。</p>
+<a id="more"></a>
+<p>现在越来越多的汽车加入了智能控制系统，由不同ECU控制不同的单元，如开关车门车灯等动作。动力系统也可通过ECU使用X-by-wire线控方式控制，而这在增加了汽车的智能性和用户的良好体验同时也带来了许多安全隐患。</p>
+<h1 id="CAN总线知识"><a href="#CAN总线知识" class="headerlink" title="CAN总线知识"></a>CAN总线知识</h1><p>ECU如何交流，攻击者又如何进行攻击呢。目前大多数汽车内ECU间的通讯都是通过CAN总线进行的。</p>
+<h2 id="CAN总线基础知识"><a href="#CAN总线基础知识" class="headerlink" title="CAN总线基础知识"></a>CAN总线基础知识</h2><p>CAN是控制器局域网络(Controller Area Network, CAN)的简称，是ISO国际标准化的串行通信协议。广泛应用于汽车、船舶等。具有已经被大家认可的高性能和可靠性。<br>CAN控制器通过组成总线的2根线（CAN-H和CAN-L）的电位差来确定总线的电平，在任一时刻，总线上有2种电平：显性电平和隐性电平。显性电平逻辑值为0,隐性为1。总线空闲时，总线上所有单元都可以启动发送信息，当多个单元同时发送信息时，最高优先级的单元获得发送资格。<br>CAN 总线是一个广播类型的总线，所以<strong>任何在总线上的节点都可以监听总线上传输的数据</strong>。</p>
+<h3 id="CAN总线分类"><a href="#CAN总线分类" class="headerlink" title="CAN总线分类"></a>CAN总线分类</h3><h4 id="高速CAN"><a href="#高速CAN" class="headerlink" title="高速CAN"></a>高速CAN</h4><p>根据线缆的长度提供从5Kbit/s到1Mbit/s的波特率。</p>
+<h4 id="低速-容错CAN"><a href="#低速-容错CAN" class="headerlink" title="低速-容错CAN"></a>低速-容错CAN</h4><p>提供从5 Kbit/s到125 Kbits/s的波特率。该标准允许在CAN总线连线失败时CAN总线通信得以继续进行。</p>
+<h4 id="单线CAN"><a href="#单线CAN" class="headerlink" title="单线CAN"></a>单线CAN</h4><p>只用一条导线的CAN总线协议</p>
+<p>详情可以看<a href="https://wenku.baidu.com/view/ff8562f581c758f5f61f676a.html" target="_blank" rel="external">高速CAN,低速CAN, 单线CAN 比较</a></p>
+<h3 id="CAN报文格式"><a href="#CAN报文格式" class="headerlink" title="CAN报文格式"></a>CAN报文格式</h3><p>CAN协议有两个部分:CAN2.0A(标准帧)与CAN2.0B(扩展帧)，其中A为基础部分，有11位id段和最大8字节的数据段。CAN2.0B为扩展部分，其定义了29位的id。</p>
+<h4 id="如何确定优先级"><a href="#如何确定优先级" class="headerlink" title="如何确定优先级"></a>如何确定优先级</h4><p>CAN采用了比特位仲裁机制，id段即为仲裁域，在仲裁期间，每一个发送器都对发送的电平与被监控的总线电平进行比较。如果电平相同，则这个单元可以继续发送。如果发送的是一”隐性”电平而监视到的是一”显性”电平，那么这个节点失去了仲裁，必须退出发送状态。<strong>简单来说，id越小，优先级越高。</strong></p>
+<p>详细内容可以看<a href="https://www.cnblogs.com/spoorer/p/6649303.html" target="_blank" rel="external">这篇文章</a></p>
+<h2 id="汽车中的CAN总线"><a href="#汽车中的CAN总线" class="headerlink" title="汽车中的CAN总线"></a>汽车中的CAN总线</h2><p>可以用于和已经用于汽车中的总线并不只CAN总线一种，其他的有LIN、FlexRay(双线冗余,高带宽,实时性强,少数高端车型用在动力系统中)、MOST(用于多媒体系统)等总线协议。但由于成本和其他考量大多数车型都使用了CAN总线。其中许多车型总线中加入了网关来进行帧转换。</p>
+<h3 id="舒适CAN"><a href="#舒适CAN" class="headerlink" title="舒适CAN"></a>舒适CAN</h3><p>舒适CAN一般为低速CAN，其负责车身控制和舒适性功能如开关车锁、车灯、雨刷、后视镜调节、座椅调节加热等操作，有时也带有仪表数据。<br>详细内容可看<a href="https://wenku.baidu.com/view/034145ab770bf78a652954b0.html" target="_blank" rel="external">舒适CAN总线系统</a></p>
+<h3 id="动力CAN"><a href="#动力CAN" class="headerlink" title="动力CAN"></a>动力CAN</h3><p>动力CAN一般为高速CAN，其一般联通了发动机ECU、ABS系统、安全气囊等系统。</p>
+<p><em>不同车型有不同数量和用途的总线，多的可以有4条线分管动力、舒适、多媒体仪表，少的则只有上面两种</em>。</p>
+<h1 id="所需软件及硬件"><a href="#所需软件及硬件" class="headerlink" title="所需软件及硬件"></a>所需软件及硬件</h1><h2 id="开源系"><a href="#开源系" class="headerlink" title="开源系"></a>开源系</h2><h3 id="BusMaster"><a href="#BusMaster" class="headerlink" title="BusMaster"></a><a href="http://rbei-etas.github.io/busmaster/" target="_blank" rel="external">BusMaster</a></h3><ul>
+<li>支持导入车辆数据库(非dbc格式，特有dbf格式，带转换工具)</li>
+<li>支持多种硬件与多种网络</li>
+<li>提供统计分析</li>
+<li>提供展示、过滤、特殊颜色显示等功能</li>
+<li>可以实时监控网络流量</li>
+<li>支持网络仿真</li>
+<li>支持CAPL编程</li>
+</ul>
+<p>支持硬件列表:</p>
+<ul>
+<li>ETAS BOA</li>
+<li>ETAS ES581.3</li>
+<li>ETAS ES581.4</li>
+<li>ETAS ISOLAR-EVE</li>
+<li>i-VIEW</li>
+<li>InterprediCS neoVI</li>
+<li>IXXAT VCI</li>
+<li>Kvaser CAN (《智能汽车安全攻防大揭秘》一书中推荐,淘宝单通道2300左右)</li>
+<li>MHS Tiny-CAN</li>
+<li>NSI CAN-API</li>
+<li>PEAK USB</li>
+<li>Vector XL</li>
+<li>VScom CAN-API</li>
+</ul>
+<h3 id="CANToolz"><a href="#CANToolz" class="headerlink" title="CANToolz"></a><a href="(https://github.com/CANToolz/CANToolz">CANToolz</a></h3><p>a.k.a. YACHT (Yet Another Car Hacking Tool)</p>
+<ul>
+<li>实时分析能力较弱</li>
+<li>基于web展示，ui操作性弱</li>
+<li>实验性的提供了部分识别动作帧与事件帧的功能</li>
+</ul>
+<p>支持硬件列表:</p>
+<ul>
+<li><a href="http://www.fischl.de/usbtin/" target="_blank" rel="external">USBtin</a> 只要30多美元的开源USB to CAN interface</li>
+<li><a href="https://canb.us/" target="_blank" rel="external">CANBus Triple</a> 73美元。可以通过蓝牙连接，其官方也提供了软件来分析数据</li>
+<li><a href="https://www.seeedstudio.com/CAN-BUS-Shield-V1.2-p-2256.html" target="_blank" rel="external">Seeed CAN-BUS Shield 1.2</a> 20多美元，基于arduino</li>
+</ul>
+<h2 id="国外商业"><a href="#国外商业" class="headerlink" title="国外商业"></a>国外商业</h2><h3 id="Vehicle-spy"><a href="#Vehicle-spy" class="headerlink" title="Vehicle spy"></a><a href="https://www.intrepidcs.com/products/software/vehicle-spy/" target="_blank" rel="external">Vehicle spy</a></h3><ul>
+<li>可以导入dbc数据库</li>
+<li>可实时监控总线</li>
+<li>支持网络仿真</li>
+<li>支持Function Block编程</li>
+<li>可以更改ECU内存</li>
+<li>还有许多功能，基本想到的都有</li>
+<li>有<a href="https://www.intrepidcs.com/learning-center/training-video-library/" target="_blank" rel="external">官方视频教程</a></li>
+<li>硬件软件都不便宜</li>
+</ul>
+<h3 id="CANoe"><a href="#CANoe" class="headerlink" title="CANoe"></a><a href="https://vector.com/vi_canoe_en.html" target="_blank" rel="external">CANoe</a></h3><ul>
+<li>可以导入dbc数据库</li>
+<li>可实时监控总线</li>
+<li>支持网络仿真</li>
+<li>还有许多功能，基本想到的都有</li>
+<li>硬件软件都不便宜</li>
+</ul>
+<h2 id="国产"><a href="#国产" class="headerlink" title="国产"></a>国产</h2><p>硬件:</p>
+<ul>
+<li>USBCAN-I/USBCAN-II</li>
+<li>USBCAN-OBD<br>软件:</li>
+<li>ECAN Tools</li>
+<li>CANTest</li>
+<li>CANPro</li>
+</ul>
+<p>价格最贵不超过七百，无仿真功能，基本功能齐全。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Sec/" rel="tag">#Sec</a>
+          
+            <a href="/tags/智能汽车攻防/" rel="tag">#智能汽车攻防</a>
+          
+            <a href="/tags/CAN/" rel="tag">#CAN</a>
+          
+            <a href="/tags/Car-hacking/" rel="tag">#Car hacking</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/02/2017XDCTF-Writeup/" rel="next" title="2017XDCTF-Writeup">
+                <i class="fa fa-chevron-left"></i> 2017XDCTF-Writeup
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+            <div id="uyan_frame"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/avatar.jpg"
+               alt="leommxj" />
+          <p class="site-author-name" itemprop="name">leommxj</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">5</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/leommxj" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#CAN总线知识"><span class="nav-number">1.</span> <span class="nav-text">CAN总线知识</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#CAN总线基础知识"><span class="nav-number">1.1.</span> <span class="nav-text">CAN总线基础知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CAN总线分类"><span class="nav-number">1.1.1.</span> <span class="nav-text">CAN总线分类</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#高速CAN"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">高速CAN</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#低速-容错CAN"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">低速-容错CAN</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#单线CAN"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">单线CAN</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CAN报文格式"><span class="nav-number">1.1.2.</span> <span class="nav-text">CAN报文格式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#如何确定优先级"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">如何确定优先级</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#汽车中的CAN总线"><span class="nav-number">1.2.</span> <span class="nav-text">汽车中的CAN总线</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#舒适CAN"><span class="nav-number">1.2.1.</span> <span class="nav-text">舒适CAN</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#动力CAN"><span class="nav-number">1.2.2.</span> <span class="nav-text">动力CAN</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#所需软件及硬件"><span class="nav-number">2.</span> <span class="nav-text">所需软件及硬件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#开源系"><span class="nav-number">2.1.</span> <span class="nav-text">开源系</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#BusMaster"><span class="nav-number">2.1.1.</span> <span class="nav-text">BusMaster</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CANToolz"><span class="nav-number">2.1.2.</span> <span class="nav-text">CANToolz</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#国外商业"><span class="nav-number">2.2.</span> <span class="nav-text">国外商业</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Vehicle-spy"><span class="nav-number">2.2.1.</span> <span class="nav-text">Vehicle spy</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CANoe"><span class="nav-number">2.2.2.</span> <span class="nav-text">CANoe</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#国产"><span class="nav-number">2.3.</span> <span class="nav-text">国产</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">leommxj</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+  
+
+    
+      
+    
+
+   
+        <!-- UY BEGIN -->
+        <script type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=2136197"></script>
+        <!-- UY END -->
+    
+  
+  
+  
+  
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+  </script>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+      var all = MathJax.Hub.getAllJax(), i;
+      for (i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+      }
+    });
+  </script>
+  <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+  
+
+  
+<script type="text/javascript" async src="//push.zhanzhang.baidu.com/push.js">
+</script>
+
+
+</body>
+</html>
