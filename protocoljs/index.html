@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>ProtocolJS</title>
+		<link rel="stylesheet" href="https://unpkg.com/purecss@2.0.1/build/pure-min.css" >
+		<link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/grids-responsive-min.css" />
+		<style>
+			#resultEdit{
+				height: 75vh;
+			} 
+
+			#inputEdit{
+				height: 50vh;
+			} 
+
+			#protocolEdit{
+				height: 20vh;
+			} 
+			.top h1 {
+				border-top-left-radius: .5em; -moz-border-radius-topleft: .5em;
+				border-bottom-right-radius: .5em; -moz-border-radius-bottomright: .5em;
+				text-shadow: black 0 0 1.25px;
+				display: table;
+				/* background-color: #2c5f85; color: white; */
+				background-color: #234d6b; color: white;
+				margin-top: .5em 0 .5em 0;
+				padding: .2em;
+			}
+		</style>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+	</head>
+	<body>
+		<div class="pure-g top">
+			<div class="pure-u-1-24"></div>
+			<div class="pure-u-15-24">
+				<h1 style="letter-spacing: 0em;">ProtocolJS</h1>
+			</div>
+			<div class="pure-u-8-24" style="margin: auto">
+				<span style="font-size:1rem">Well-Known Protocol:</span>
+				<select id="wellKnownSelect" onChange="select_well_known()">
+				</select>
+			</div>
+		</div>
+		<div class="pure-g">
+			<div class="pure-u-1-24"> </div>
+			<div class="pure-u-10-24"> 
+				<div id="inputEdit"></div> 
+				<div style="height:5vh">
+					<span style="font-size:1rem">Language/Platform:</span>
+					<select id="langSelect">
+						<option value="proto_desc">Protocol Desciption</option>
+					</select>
+				</div>
+				<div id="protocolEdit"></div> 
+			</div>
+			<div class="pure-u-1-24"> </div>
+			<div class="pure-u-11-24"> <div id="resultEdit"></div> </div>
+		</div>
+		<div class="pure-g" style="height:5vh"></div>
+		<div class="pure-g"><button class="pure-button pure-button-primary" style="margin:auto;font-size:125%" onclick="go()">Do Ascii Art</button></div>
+		<script src="./protocol.js"></script>
+		<script src="./parser.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.11/ace.min.js" type="text/javascript" charset="utf-8"></script>
+		<script>
+			var inputEdit = ace.edit("inputEdit");
+			inputEdit.setValue("Input Code");
+			var resultEdit = ace.edit("resultEdit");
+			resultEdit.setValue("Generated Ascii Art will be displayed here");
+			var protocolEdit = ace.edit("protocolEdit");
+			protocolEdit.setValue("protocol header description here");
+			var wellKnownSelect = document.getElementById("wellKnownSelect");
+			for (var k in protocoljs.specs){
+				var new_option = document.createElement("option");
+				new_option.text = k;
+				wellKnownSelect.add(new_option)
+
+			}
+			var langSelect = document.getElementById("langSelect");
+			for(var k in protocoljs.ctype_len){
+				var new_option = document.createElement("option");
+				new_option.text = "C Struct - " + k;
+				new_option.value = k;
+				langSelect.add(new_option);
+			}
+			function go(){
+				var inputText = inputEdit.session.getValue();
+				var lang = langSelect.selectedOptions[0].value;
+				if(lang == "proto_desc"){
+					protocoljs.parse(inputText);
+					protocolEdit.session.setValue(inputText);
+				}else{
+					var protoText = protocoljs.fromCStruct(inputText, lang);
+					if(protoText == null){
+						alert("wrong input");
+						return ;
+					}
+					protocoljs.parse(protoText);
+					protocolEdit.session.setValue(protoText);
+				}
+				resultEdit.session.setValue(protocoljs.toString());
+			};
+
+			function select_well_known(){
+				var _proto = wellKnownSelect.selectedOptions[0].text;
+				protocolEdit.session.setValue(protocoljs.specs[_proto]);
+				protocoljs.parse(protocoljs.specs[_proto]);
+				resultEdit.session.setValue(protocoljs.toString());
+			};
+			window.onerror = function(message, source, lineno, colno, error) {
+				alert(message + error);
+			};
+		</script>
+	</body>
+</html>
