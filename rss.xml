@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Stop Here</title>
+    <link>http://www.leommxj.com/</link>
+    <description>And FxxkOff</description>
+    <language>zh-Hans</language>
+    <copyright>All rights reserved 2026, leommxj</copyright>
+    <lastBuildDate>Sat, 18 Jul 2026 16:35:12 GMT</lastBuildDate>
+    <generator>Hexo</generator>
+    <atom:link href="http://www.leommxj.com/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>从x为灵眸学习通过电磁泄漏特征检测偷拍摄像头</title>
+      <link>http://www.leommxj.com/2026/06/11/EM-leakage-based-hidden-camera-detection/</link>
+      <description>
+        <![CDATA[<p>几个月前在b站刷到一个介绍”华为灵眸摄像头检测手持款 DF10”设备检测摄像头的视频，视频中除了普通Wi-Fi摄像头检测外还演示了检测一个笔状没有无线通信功能、电池供电的摄像头。 这就勾起了我的兴趣，他是使用什么技术做的检测，又能做到什么程度呢？ 本文将从笔者所了解的几种检测方式开始，分享对此产品<strong>不完全</strong>的逆向分析，以及使用常见SDR设备复刻相似功能程序的测试效果。(PS.拖延太久，文章中部分内容有敷衍了事的迹象)</p>]]>
+      </description>
+      <author>leommxj</author>
+      <category domain="http://www.leommxj.com/tags/%E5%8F%8D%E5%81%B7%E6%8B%8D/">反偷拍</category>
+      <category domain="http://www.leommxj.com/tags/%E7%94%B5%E7%A3%81%E6%B3%84%E6%BC%8F/">电磁泄漏</category>
+      <category domain="http://www.leommxj.com/tags/RF/">RF</category>
+      <category domain="http://www.leommxj.com/tags/camfinder/">camfinder</category>
+      <pubDate>Thu, 11 Jun 2026 07:17:58 GMT</pubDate>
+    </item>
+    <item>
+      <title>KiCad mcp 智能体布线测试</title>
+      <link>http://www.leommxj.com/2026/04/24/kicad-mcp-agent-route-test/</link>
+      <description>
+        <![CDATA[<p>在2025年低opus4.6与gpt5.4出现之后，顶尖模型+agent的表现非常亮眼。 在编程&#x2F;安全领域中除了仍然有些上下文限制、记忆丢失、思路跑偏之类的限制外，多数任务上都能比人快的同时做得不比人差，甚至更好。</p>
+<p>这种交互基本上都是纯文本形式的，不管是用户的纯文本输入，编写的各种语言代码，还是mcp tool call的json数据。 某日突发奇想尝试下需要多模态图片分析能力的任务不知道目前表现如何，于是想用agent来画一下pcb板。 当然，如果真的是为了画板子，可能选择成熟算法的auto router怎么都比耗费大量token还不一定画的明白的agent更有效率，也更省钱。</p>]]>
+      </description>
+      <author>leommxj</author>
+      <category domain="http://www.leommxj.com/tags/KiCad/">KiCad</category>
+      <category domain="http://www.leommxj.com/tags/mcp/">mcp</category>
+      <category domain="http://www.leommxj.com/tags/agent/">agent</category>
+      <category domain="http://www.leommxj.com/tags/EE/">EE</category>
+      <pubDate>Fri, 24 Apr 2026 08:25:09 GMT</pubDate>
+    </item>
+    <item>
+      <title>大疆植保无人机T40_RD2484R雷达逆向</title>
+      <link>http://www.leommxj.com/2026/04/20/dji-t40-RD2484R-radar-reverse-engineering/</link>
+      <description>
+        <![CDATA[<p>偶尔在网上看到有人买大疆T40的雷达做桌面摆件，看起来还挺哏。搜了下发现多数人都只是硬改一路供电让电机转起来，起了让他正常工作的念头，于是前后花费了一个月(比预期长不少)的时间研究了下如何让他正常运作并且获得有意义的雷达数据。</p>
+<p><img src="https://pic.leommxj.com/blog/dji_t40_radar/TOP_AND_BOTTOM.JPG"></p>]]>
+      </description>
+      <author>leommxj</author>
+      <category domain="http://www.leommxj.com/tags/Reverse/">Reverse</category>
+      <category domain="http://www.leommxj.com/tags/dji/">dji</category>
+      <category domain="http://www.leommxj.com/tags/radar/">radar</category>
+      <pubDate>Sun, 19 Apr 2026 16:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>为CHIP-8编写ida process module</title>
+      <link>http://www.leommxj.com/2019/02/21/write-a-ida-process-module-for-chip-8/</link>
+      <description>
+        <![CDATA[<p>在对嵌入式设备进行逆向分析的过程中，偶尔会遇到一些比较小众或专业性较强的处理器，使用ida默认不支持的指令集。这时为了愉快的使用ida pro逆向就需要编写对应的处理器模块。出于学习目的，找一个非常简单的指令集来探路，CHIP-8再合适不过了。</p>]]>
+      </description>
+      <author>leommxj</author>
+      <category domain="http://www.leommxj.com/categories/Sec/">Sec</category>
+      <category domain="http://www.leommxj.com/tags/Reverse/">Reverse</category>
+      <category domain="http://www.leommxj.com/tags/ida-pro/">ida pro</category>
+      <pubDate>Wed, 20 Feb 2019 18:23:33 GMT</pubDate>
+    </item>
+    <item>
+      <title>2018HITCTF-WriteUp</title>
+      <link>http://www.leommxj.com/2018/02/02/2018HITCTF-WriteUp/</link>
+      <description>
+        <![CDATA[<p>哈工大的校赛，抽了两个下午打了几个小时，还是菜了2333。记录一下。</p>]]>
+      </description>
+      <author>leommxj</author>
+      <category domain="http://www.leommxj.com/categories/Sec/">Sec</category>
+      <category domain="http://www.leommxj.com/categories/Sec/Writeup/">Writeup</category>
+      <category domain="http://www.leommxj.com/tags/CTF/">CTF</category>
+      <category domain="http://www.leommxj.com/tags/Writeup/">Writeup</category>
+      <category domain="http://www.leommxj.com/tags/Sec/">Sec</category>
+      <pubDate>Fri, 02 Feb 2018 11:58:50 GMT</pubDate>
+    </item>
+    <item>
+      <title>Nginx+Tornado部署CTFd</title>
+      <link>http://www.leommxj.com/2018/01/30/CTFd-deployment-using-Nginx-Tornado/</link>
+      <description>
+        <![CDATA[<p>假期要做点简单的培训需要一个平台放题,在考虑再三后还是选择了<a href="https://github.com/CTFd/CTFd">CTFd</a> .部署没有采用官方推荐的<a href="http://gunicorn.org/">gunicorn</a>而用了<a href="http://www.tornadoweb.org/">tornado</a>,为了利用多核性能前面加了Nginx做反向代理,其后运行四个Tornado实例。</p>]]>
+      </description>
+      <author>leommxj</author>
+      <category domain="http://www.leommxj.com/categories/Operations/">Operations</category>
+      <category domain="http://www.leommxj.com/tags/%E8%BF%90%E7%BB%B4/">运维</category>
+      <category domain="http://www.leommxj.com/tags/CTFd/">CTFd</category>
+      <pubDate>Tue, 30 Jan 2018 09:34:09 GMT</pubDate>
+    </item>
+    <item>
+      <title>Car Hacking 101/智能汽车攻防</title>
+      <link>http://www.leommxj.com/2017/12/17/Car-Hacking-101-%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E6%94%BB%E9%98%B2/</link>
+      <description>
+        <![CDATA[<p>智能汽车攻防，(除去对PKE、RKE等的hacking只考虑控制车身系统)个人认为可以分为两个阶段。第一阶段是寻找如何接入CAN总线，第二阶段是CAN总线上的数据分析与攻击。第一阶段的研究基本要靠车型本身信息系统的漏洞，比如未将多媒体系统与舒适can隔离，条件所限难以研究。第二阶段上手较为简单，本文主要集中在第二阶段。</p>]]>
+      </description>
+      <author>leommxj</author>
+      <category domain="http://www.leommxj.com/categories/Sec/">Sec</category>
+      <category domain="http://www.leommxj.com/tags/Sec/">Sec</category>
+      <category domain="http://www.leommxj.com/tags/%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E6%94%BB%E9%98%B2/">智能汽车攻防</category>
+      <category domain="http://www.leommxj.com/tags/CAN/">CAN</category>
+      <category domain="http://www.leommxj.com/tags/Car-hacking/">Car hacking</category>
+      <pubDate>Sun, 17 Dec 2017 15:46:52 GMT</pubDate>
+    </item>
+    <item>
+      <title>OpenStack pike 单节点部署测试和踩坑</title>
+      <link>http://www.leommxj.com/2017/11/24/2017-11-24-Openstack-pike-Installation/</link>
+      <description>
+        <![CDATA[<p>Centos7.3 OpenStack pike版本单节点部署，只安装了glance、keystone、nova、neutron和horizon没有部署cinder swift等。过程主要是跟官方文档走，过程中有几个坑点，记录一下。</p>]]>
+      </description>
+      <author>leommxj</author>
+      <category domain="http://www.leommxj.com/categories/Operations/">Operations</category>
+      <category domain="http://www.leommxj.com/tags/openstack/">openstack</category>
+      <category domain="http://www.leommxj.com/tags/%E7%A7%81%E6%9C%89%E4%BA%91/">私有云</category>
+      <pubDate>Fri, 24 Nov 2017 05:08:28 GMT</pubDate>
+    </item>
+    <item>
+      <title>2017XDCTF-Writeup</title>
+      <link>http://www.leommxj.com/2017/10/02/2017XDCTF-Writeup/</link>
+      <description>
+        <![CDATA[<p>大国庆的，做着做着就不想做了，假装自己是一个战队。</p>]]>
+      </description>
+      <author>leommxj</author>
+      <category domain="http://www.leommxj.com/categories/Sec/">Sec</category>
+      <category domain="http://www.leommxj.com/categories/Sec/Writeup/">Writeup</category>
+      <category domain="http://www.leommxj.com/tags/CTF/">CTF</category>
+      <category domain="http://www.leommxj.com/tags/Writeup/">Writeup</category>
+      <category domain="http://www.leommxj.com/tags/Sec/">Sec</category>
+      <category domain="http://www.leommxj.com/tags/Base64%E9%9A%90%E5%86%99/">Base64隐写</category>
+      <pubDate>Mon, 02 Oct 2017 13:30:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>RCE Bypass 远程命令执行绕过技巧</title>
+      <link>http://www.leommxj.com/2017/06/11/RCE-Bypass/</link>
+      <description>
+        <![CDATA[<p>最近在几个ctf比赛中遇到好几次远程命令执行绕过的题，网上资料比较零散，做一下整理。</p>]]>
+      </description>
+      <author>leommxj</author>
+      <category domain="http://www.leommxj.com/categories/Sec/">Sec</category>
+      <category domain="http://www.leommxj.com/tags/CTF/">CTF</category>
+      <category domain="http://www.leommxj.com/tags/Sec/">Sec</category>
+      <pubDate>Sun, 11 Jun 2017 06:57:24 GMT</pubDate>
+    </item>
+    <item>
+      <title>AlexCTF-Writeup</title>
+      <link>http://www.leommxj.com/2017/02/08/AlexCTF-Writeup/</link>
+      <description>
+        <![CDATA[<p>一个由埃及亚历山大大学的学生俱乐部<a href="https://twitter.com/MSTCAlex">MSP Teach Club</a>组织的CTF比赛,办得不错。第一次参加外国的CTF比赛，感觉出题的有些思路跟国内真是不一样。由于运维难度比赛主办没出PWN和WEB的题:D.最后还是有几道题没做出来，看各种大神全做完也是很心累。</p>]]>
+      </description>
+      <author>leommxj</author>
+      <category domain="http://www.leommxj.com/categories/Sec/">Sec</category>
+      <category domain="http://www.leommxj.com/categories/Sec/Writeup/">Writeup</category>
+      <category domain="http://www.leommxj.com/tags/CTF/">CTF</category>
+      <category domain="http://www.leommxj.com/tags/Writeup/">Writeup</category>
+      <category domain="http://www.leommxj.com/tags/Sec/">Sec</category>
+      <pubDate>Wed, 08 Feb 2017 08:44:08 GMT</pubDate>
+    </item>
+    <item>
+      <title>hello_world</title>
+      <link>http://www.leommxj.com/2017/02/08/hello-world/</link>
+      <description>
+        <![CDATA[<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span clas]]>
+      </description>
+      <author>leommxj</author>
+      <pubDate>Wed, 08 Feb 2017 08:44:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

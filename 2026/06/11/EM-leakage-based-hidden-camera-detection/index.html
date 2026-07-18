@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon/web-app-manifest-192x192.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-96x96.png">
+  <link rel="mask-icon" href="/favicon/favicon.svg" color="#222">
+  <link rel="manifest" href="/favicon/manifest.json">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.leommxj.com","root":"/","images":"/images","scheme":"Mist","darkmode":true,"version":"8.24.1","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="几个月前在b站刷到一个介绍”华为灵眸摄像头检测手持款 DF10”设备检测摄像头的视频，视频中除了普通Wi-Fi摄像头检测外还演示了检测一个笔状没有无线通信功能、电池供电的摄像头。 这就勾起了我的兴趣，他是使用什么技术做的检测，又能做到什么程度呢？ 本文将从笔者所了解的几种检测方式开始，分享对此产品不完全的逆向分析，以及使用常见SDR设备复刻相似功能程序的测试效果。(PS.拖延太久，文章中部分内容有">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从x为灵眸学习通过电磁泄漏特征检测偷拍摄像头">
+<meta property="og:url" content="http://www.leommxj.com/2026/06/11/EM-leakage-based-hidden-camera-detection/index.html">
+<meta property="og:site_name" content="Stop Here">
+<meta property="og:description" content="几个月前在b站刷到一个介绍”华为灵眸摄像头检测手持款 DF10”设备检测摄像头的视频，视频中除了普通Wi-Fi摄像头检测外还演示了检测一个笔状没有无线通信功能、电池供电的摄像头。 这就勾起了我的兴趣，他是使用什么技术做的检测，又能做到什么程度呢？ 本文将从笔者所了解的几种检测方式开始，分享对此产品不完全的逆向分析，以及使用常见SDR设备复刻相似功能程序的测试效果。(PS.拖延太久，文章中部分内容有">
+<meta property="og:locale">
+<meta property="og:image" content="https://pic.leommxj.com/blog/camfinder/p2_pizero.jpg">
+<meta property="og:image" content="https://pic.leommxj.com/blog/camfinder/Fig4_Overview_of_the_camera_detection_methods.png">
+<meta property="og:image" content="https://pic.leommxj.com/blog/camfinder/mdk3003.png">
+<meta property="og:image" content="https://pic.leommxj.com/blog/camfinder/cam_on_sdrsharp.png">
+<meta property="og:image" content="https://pic.leommxj.com/blog/camfinder/cam_off_sdrsharp.png">
+<meta property="og:image" content="https://pic.leommxj.com/blog/camfinder/camfinder.png">
+<meta property="og:image" content="https://pic.leommxj.com/blog/camfinder/7cam_1.jpg">
+<meta property="og:image" content="https://pic.leommxj.com/blog/camfinder/7cam_2.jpg">
+<meta property="og:image" content="https://pic.leommxj.com/blog/camfinder/25mhz.JPG">
+<meta property="og:image" content="https://pic.leommxj.com/blog/camfinder/other3.jpg">
+<meta property="article:published_time" content="2026-06-11T07:17:58.000Z">
+<meta property="article:modified_time" content="2026-07-18T16:35:12.613Z">
+<meta property="article:author" content="leommxj">
+<meta property="article:tag" content="反偷拍">
+<meta property="article:tag" content="电磁泄漏">
+<meta property="article:tag" content="RF">
+<meta property="article:tag" content="camfinder">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic.leommxj.com/blog/camfinder/p2_pizero.jpg">
+
+
+<link rel="canonical" href="http://www.leommxj.com/2026/06/11/EM-leakage-based-hidden-camera-detection/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-Hans","comments":true,"permalink":"http://www.leommxj.com/2026/06/11/EM-leakage-based-hidden-camera-detection/","path":"2026/06/11/EM-leakage-based-hidden-camera-detection/","title":"从x为灵眸学习通过电磁泄漏特征检测偷拍摄像头"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>从x为灵眸学习通过电磁泄漏特征检测偷拍摄像头 | Stop Here</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/rss.xml" title="Stop Here" type="application/rss+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Stop Here</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">And FxxkOff</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="Search" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%BA%9B%E9%9A%90%E8%97%8F%E6%91%84%E5%83%8F%E5%A4%B4%E6%A3%80%E6%B5%8B%E6%89%8B%E6%AE%B5"><span class="nav-number">1.</span> <span class="nav-text">一些隐藏摄像头检测手段</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#x%E5%8A%9B%E8%A5%BF%E4%BA%94%E5%90%88%E4%B8%80%E6%A3%80%E6%B5%8B%E4%BB%AA%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90"><span class="nav-number">1.1.</span> <span class="nav-text">x力西五合一检测仪原理分析</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%83%B3%E5%8A%9E%E6%B3%95%E5%AD%A6%E4%BB%96%E4%B8%80%E6%89%8B"><span class="nav-number">2.</span> <span class="nav-text">想办法学他一手</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E8%BF%87%E6%99%B6%E6%8C%AF%E8%B0%90%E6%B3%A2%E7%94%B5%E7%A3%81%E6%B3%84%E9%9C%B2%E6%A3%80%E6%B5%8B%E6%91%84%E5%83%8F%E5%A4%B4"><span class="nav-number">3.</span> <span class="nav-text">通过晶振谐波电磁泄露检测摄像头</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%8D%E5%88%BB%E4%B8%8E%E6%B5%8B%E8%AF%95"><span class="nav-number">4.</span> <span class="nav-text">复刻与测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E5%B0%BE"><span class="nav-number">5.</span> <span class="nav-text">结尾</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">leommxj</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">23</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/leommxj" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;leommxj" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:leommxj@gmail.com" title="leommxj@gmail.com → mailto:leommxj@gmail.com" rel="noopener me" target="_blank"><i class="fab fa-envelope fa-fw"></i>leommxj@gmail.com</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://www.leommxj.com/2026/06/11/EM-leakage-based-hidden-camera-detection/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="leommxj">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Stop Here">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="从x为灵眸学习通过电磁泄漏特征检测偷拍摄像头 | Stop Here">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          从x为灵眸学习通过电磁泄漏特征检测偷拍摄像头
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2026-06-11 15:17:58" itemprop="dateCreated datePublished" datetime="2026-06-11T15:17:58+08:00">2026-06-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2026-07-19 00:35:12" itemprop="dateModified" datetime="2026-07-19T00:35:12+08:00">2026-07-19</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>几个月前在b站刷到一个介绍”华为灵眸摄像头检测手持款 DF10”设备检测摄像头的视频，视频中除了普通Wi-Fi摄像头检测外还演示了检测一个笔状没有无线通信功能、电池供电的摄像头。 这就勾起了我的兴趣，他是使用什么技术做的检测，又能做到什么程度呢？ 本文将从笔者所了解的几种检测方式开始，分享对此产品<strong>不完全</strong>的逆向分析，以及使用常见SDR设备复刻相似功能程序的测试效果。(PS.拖延太久，文章中部分内容有敷衍了事的迹象)</p>
+<span id="more"></span>
+
+<p>DF10介绍文档: </p>
+<p><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100546268/484b917f">华为灵眸摄像头检测手持款 DF10 用户指南</a></p>
+<p><a href="https://support.huawei.com/enterprise/zh/doc/EDOC1100553234">（多媒体）华为灵眸DF10防偷拍使用指南</a></p>
+<p>截至202606，此产品在电商平台似乎未正式开卖或者仅2b销售，咸鱼有部分展示机销售，2000元左右。</p>
+<h2 id="一些隐藏摄像头检测手段"><a href="#一些隐藏摄像头检测手段" class="headerlink" title="一些隐藏摄像头检测手段"></a>一些隐藏摄像头检测手段</h2><p>粗浅见解，可能有误。</p>
+<ul>
+<li><p>红外：多数监控摄像头的夜视功能都是主动夜视，使用一些红外LED发出肉眼不可见的红外光。相机镜头组中增加一个可调的IR-CUT滤镜，白天正常启用仅可见光透过保证成像效果，夜晚关闭此滤镜，传感器接收红外光反射实现夜视。(这也是很多固定镜头组带两根线的原因，用于切换滤镜开关)。 通过不带红外滤镜的相机可以很明显的发现主动红外光源。也有检测红外光的设备。 但是显然除了监控摄像头外、不管是相机、手机还是偷拍的设备可能都不需要这种夜视功能，不需要红外LED，也就无法通过这种手段检测。</p>
+</li>
+<li><p>镜头反射(猫眼效应?)：市面上很多售卖的设备都带这个，通过一个LED发出人眼可见的红光，然后再透过红色透光玻璃&#x2F;亚克力观看，有些镜头会有明显的反光痕迹。这种反光许多镜头是没有的，比如多数手机的镜头都不存在。</p>
+<ul>
+<li>我最初以为可能与红外滤镜有关，但拆了个摄像头的脉冲控制开关的镜头组(常拆摄像头的朋友都知道，镜头组上面带2根线的，通过脉冲信号控制开关)。测试后发现不管滤镜开&#x2F;关，镜头组该有反光的还是有反光。</li>
+<li>这种光学or视觉上的识别也有其他更复杂的实现，比如利用Time-of-Flight Sensors的 <a href="https://github.com/frizensami/lapd">LAPD</a> 项目</li>
+<li>还有利用“猫眼效应”检测的方案。粗看相关介绍感觉与镜头反射的逻辑可能是一致的，不过相关的瞄准镜论文中都使用肉眼不可见的近红外NIR激光(750nm~1400nm)，但可能纯粹是为了防止被发现。 eg: <a href="https://www.spacejournal.cn/hwyjggc/cn/article/pdf/preview/10.3788/IRLA20250158.pdf">基于空间上下文的猫眼目标激光主动探测方法研究</a> 、 <a href="https://patents.google.com/patent/CN102645655A/zh">一种基于“猫眼效应”的全天候手持式激光主动侦测装置</a></li>
+</ul>
+</li>
+<li><p>无线电信号：这里先仅限于检测通信流量的，比如使用WiFi、蜂窝数据传输信号或控制指令的设备，自然会发射信号。缺点很明显：信号不是一定持续发射；信号强度、频率也跟现有的智能设备相似，易被干扰；纯本地或者有线传输的设备无法检测。 当然这也是偷拍窃听定位检测里面比较能引入技术的地方，有表现空间： 可调的宽灵敏度范围、指定频率的滤波与检测、初步(甚至深度)识别信号类型，高端设备实现的宽频持续监测等特性都可以让效果和使用体验显著提升。 市面上也有很多此类产品，像什么PRO-W12DX、 iProtect 1216或者类似Aaronia超宽频谱仪的高端设备。</p>
+</li>
+<li><p>磁场： why?</p>
+</li>
+<li><p>非线性节点探测器NLJD(non-linear junction detector)： 原理上是谐波雷达，发射信号并检测二次三次谐波反射，来检测半导体器件(PN结)。常见的是2.4GHz(或S波段其他频率)附近发射，然后检测4.8GHz与7.2GHz附近的二次三次谐波反射。显然一个巨大的优点是<strong>不需要设备上电</strong> 。 很贵的设备没有玩过，但从使用教学和评测视频里不难看出一些缺陷： 如果环境不是完全可控的，很多电器、人体传感器、带充电头的墙插等都会被识别，不太好区分是否是恶意设备。全屋扫描也是很耗时的一件事情。 根据维基百科也有些知名的对抗方案:<a href="http://www.cryptomuseum.com/covert/bugs/ec/srt107/index.htm">http://www.cryptomuseum.com/covert/bugs/ec/srt107/index.htm</a> 。</p>
+</li>
+<li><p><strong>热成像</strong>：接收物体表面散发的红外辐射能量，生成可视化热图像以反映温度分布。这里要<strong>重点吐槽</strong>一下，经常能在各类视频&#x2F;帖子的评论区中看到把热成像当作银弹的言论：”关了灯热成像扫一圈就出来了”等等。用热成像观测一个运行中的摄像头确实非常明显:</p>
+<p><img src="https://pic.leommxj.com/blog/camfinder/p2_pizero.jpg" alt="p2_pizero"></p>
+<p>但实际上热成像远远不是万能的解决方案，有些缺点是可以加钱解决的，比如分辨率太低。 但最大的缺点是热成像仪并不能像电影里一样穿透物体，如果摄像头隐藏在插座等位置其实是非常难观测到的，更别说插座、插座附近的设备本身就可能存在发热。 听到这里读者很可能觉得我在抬杠，认为这个缺点只是小小的削弱了热成像的效果。但许多人不知道的是目前主流的基于LWIR长波红外(8~14μm)的热成像仪，是<strong>不能够穿过透明的玻璃</strong>或者亚克力板的，下面用艾睿P2 Pro观察一下在摄像头前方放置一个透明亚克力的效果（视频中由于我手的温度传导到了亚克力上，在热成像中亚克力有些显眼）：</p>
+<div class="video-container"><iframe src="https://www.youtube.com/embed/WuX7a9deIS4" frameborder="0" loading="lazy" allowfullscreen></iframe></div></li>
+</ul>
+<p>在下文中还会再提到的一篇 <a href="https://ieeexplore.ieee.org/document/11343822">综述文章</a> 中作者画了一个比较炫酷的图来展示现有的一些摄像头检测方案 (可能缺少NLJD这类的？) :</p>
+<p><img src="https://pic.leommxj.com/blog/camfinder/Fig4_Overview_of_the_camera_detection_methods.png" alt="Fig4_in_11343822"></p>
+<h3 id="x力西五合一检测仪原理分析"><a href="#x力西五合一检测仪原理分析" class="headerlink" title="x力西五合一检测仪原理分析"></a>x力西五合一检测仪原理分析</h3><p>型号MDK3003，据宣传和说明书描述有: 1. <strong>1MHz-6.5Ghz，5厘米-10米</strong>宽频无线信号探测; 2. <strong>磁场</strong>设备探测; 3. <strong>红光</strong>(620-625nm)摄像头探测; 4. 振动报警检测; 5. 应急照明</p>
+<p><img src="https://pic.leommxj.com/blog/camfinder/mdk3003.png" alt="mdk3003"></p>
+<p>拆开可以看到内部主要芯片有两个，一个是来自ADI的丝印为 <em>J 5A</em> 的AD8314射频检测器芯片。另一个是TSSOP20封装的主控，丝印被磨掉了。从部分引脚上推断可能是PY32F002B系列的，但是没有成功挂上SWD。</p>
+<p>根据 <a href="https://www.analog.com/media/en/technical-documentation/data-sheets/ad8314.pdf">AD8314的Data Sheet</a>，其工作范围是<strong>100 MHz to 2.7 GHz</strong>。 使用信号源实测在3GHz时灵敏度下降不多，在5GHz时基本就无法进行有效检测了，紧贴发射天线，tinySA显示-30dBm时此探测器最高灵敏度也无法触发。 与宣传的1MHz-6.5GHz差距明显，5G WiFi信号也无法有效检测。 </p>
+<p>除了AD8314外还有: </p>
+<ul>
+<li>X160 震动感应开关用来实现振动监测。</li>
+<li>HAL248G全极性低功耗霍尔开关 用来实现所谓的”磁场检测”，这种霍尔开关只能近距离检测到磁场，并且是0&#x2F;1输出。 实际效果还不如现代手机IMU都带的磁力计好。</li>
+<li>红光LED+一个红色亚力克片，用于实现前面提到的镜头反光检测，实测效果只能说一般般。</li>
+</ul>
+<h2 id="想办法学他一手"><a href="#想办法学他一手" class="headerlink" title="想办法学他一手"></a>想办法学他一手</h2><p>虽然我对这个DF10的好奇心非常强，但2000块买个这东西我还是干不出来。没有设备的情况下只能看看能不能搞到固件分析分析。</p>
+<p>幸运的是通过逆向App Store中的”华为灵眸”(<code>com.huawei.iguard</code>)应用可以分析出手机与设备的蓝牙交互协议，以及获取app&#x2F;firmware更新信息的url:<br><code>https://soho-cn1.qiankun-saas.huawei.com/public/dist/app/iguard/app_iguard/version</code></p>
+<p><code>eKitEngineDF10_V600R025C01SPC100.cc</code> 是设备固件。令我没想到的是固件包中除了有bootloader、main_app外还有一个应该是fpga bitstream的东西。根据字符串等信息推断mcu应该是泰凌微的<strong>B92-C1T266A20</strong>或相近型号， 而FPGA部分则是来自<strong>pango紫光同创</strong>。</p>
+<p>FPGA部分搜了下也没有现成的逆向方案，而且没有实际设备即使告知我内部逻辑也不一定能知道他在做什么。 于是将重心放在B92的固件上，最初我想可能是存在主动探测的机制，像NLJD一样，但是没有找到证据，同时CMIIT ID 26J440HW5258的核准也显示只有蓝牙频段的发射。</p>
+<p>最终结合AI逆向得出的分析结论(不一定对)大致是：</p>
+<p>MCU通过FPGA控制射频前端扫描792MHz~945MHz中三个频率附近的信号局部峰，并且按频点与偏移统计合并，达到分数则认为是可疑目标。分组都是24MHz或27MHz间隔，根据地区和扫描模式变动具体频率。</p>
+<p>  区域组合：</p>
+<table>
+<thead>
+<tr>
+<th>区域值</th>
+<th>UI区域</th>
+<th>group0</th>
+<th>group4</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>亚太&#x2F;非洲&#x2F;南美</td>
+<td>792, 816, 840</td>
+<td>810, 837, 864</td>
+</tr>
+<tr>
+<td>1</td>
+<td>欧洲&#x2F;中东</td>
+<td>840, 864, 888</td>
+<td>837, 864, 891</td>
+</tr>
+<tr>
+<td>2</td>
+<td>北美</td>
+<td>888, 912, 936</td>
+<td>891, 918, 945</td>
+</tr>
+</tbody></table>
+<p>  叠加检测模式后：</p>
+<ul>
+<li>增强&#x2F;标准：扫 group0 + group4</li>
+<li>快速：只扫 group4</li>
+</ul>
+<p>从设备与APP的蓝牙交互协议和APP本身的代码看目前版本应该是没有检测具体摄像头种类&#x2F;品牌的能力，仅仅展示可疑目标和信号强度。</p>
+<p>一些蓝牙相关的内容:</p>
+<ul>
+<li><p>app scans names containing lower-case <code>huawei-df</code></p>
+<ul>
+<li><p>service <code>0000FFF8-0000-1000-8000-00805F9B34FB</code></p>
+</li>
+<li><p>write <code>0000FFF6-0000-1000-8000-00805F9B34FB</code></p>
+</li>
+<li><p>notify <code>0000FFF7-0000-1000-8000-00805F9B34FB</code></p>
+</li>
+<li><p>frame: <code>u16be cmd | u16be payload_len | payload</code></p>
+</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">0x0001 ack, 0x0002 periodicReport, 0x0003 keepAlive, 0x0004 generalRequest,</span><br><span class="line">0x0005 generalResponse, 0x0006 queryLogAndAlarm, 0x0007 upgradeStart,</span><br><span class="line">0x0008 upgradeTransmission, 0x0009 upgradeFinish, 0x000A deviceOperation,</span><br><span class="line">0x0100 version, 0x0101 esn, 0x0102 timeSync, 0x0103 nameConfig,</span><br><span class="line">0x0104 status, 0x0105 battery, 0x0106 detectionHistory, 0x0107 detectionReport,</span><br><span class="line">0x0108 detectionProgress, 0x0109 queryLog, 0x010A emtOperation,</span><br><span class="line">0x010B cameraConfig, 0x010C collectData</span><br></pre></td></tr></table></figure>
+
+<p>AI产出的固件下载、解包、ble脚本: <a href="https://gist.github.com/leommxj/73b058327c9937e64e5defa55166f785">DF10_scripts</a></p>
+<h2 id="通过晶振谐波电磁泄露检测摄像头"><a href="#通过晶振谐波电磁泄露检测摄像头" class="headerlink" title="通过晶振谐波电磁泄露检测摄像头"></a>通过晶振谐波电磁泄露检测摄像头</h2><p>从上面可以看出设备大概率是一个纯被动的射频信号探测器， 通过探测配置好的三个一组频点周围的局部信号峰来检测摄像头，频率间隔都为24MHz&#x2F;27MHz。 比如792.03MHz、816.03MHz、840.03MHz都存在局部信号峰，并且满足一定要求，则认为存在可疑设备，且会生成并显示信号强度来帮助用户判断距离。</p>
+<p>根据24&#x2F;27 MHz间隔这个特征，可以看出很有可能是跟晶振频率有关，据此搜索了下相关论文，发现几篇相当符合的研究：</p>
+<ul>
+<li>CamRadar: Hidden Camera Detection Leveraging Amplitude-modulated Sensor Images Embedded in Electromagnetic Emanations <a href="https://dl.acm.org/doi/10.1145/3569505">https://dl.acm.org/doi/10.1145/3569505</a> </li>
+<li>CamDetector: Detecting and Positioning Hidden Cameras with Raspberry Pi 4 via EM Radiation  <a href="https://ieeexplore.ieee.org/document/10512830/">https://ieeexplore.ieee.org/document/10512830/</a></li>
+<li>Eye of Sauron: Long-Range Hidden Spy Camera  Detection and Positioning with Inbuilt  Memory EM Radiation <a href="https://www.usenix.org/conference/usenixsecurity24/presentation/zhang-qibo">https://www.usenix.org/conference/usenixsecurity24/presentation/zhang-qibo</a></li>
+<li>CamFirm: A Compact FM-Based Module for Hidden Camera Detection <a href="https://ieeexplore.ieee.org/document/11018745">https://ieeexplore.ieee.org/document/11018745</a></li>
+</ul>
+<p>其中CamRadar是我找到的最早针对摄像头中晶振产生的时钟信号可能耦合到线缆或其他信号中，导致意外的泄露出部分信息(这里是摄像头存在这个事情)， 同时论文也分析了不同fps下、<strong>开关&#x2F;闪烁灯光</strong>、AM解调、相机传感器电压等变化时此类电磁泄漏的变化情况。 主要的测试设备为USRP B210+FST-RFAMP01低噪放+3dbi全向天线，频率范围在200MHz-800MHz， 测试了19个摄像头。很专业和完善的测试，推荐阅读。</p>
+<p>随后CamDetector中将泄露聚焦在晶振时钟信号耦合到CSI排线上的行为，并且展示了不同视频参数的情况下带来信号的变化。主要测试的频率范围是100MHz–500MHz</p>
+<p>Eye of Sauron 则是另外检测了的内存带来的泄露，并且宣称通过灯光刺激加内存泄露信号检测能达到20m距离，且有极好的检测准确度。 </p>
+<p>CamFirm则提出一个通过有线耳机当作天线，用手机内置(or 外置)FM模块在FM广播所用的频率上，以低成本非专用设备检测摄像头的方案。</p>
+<p>在最近的一篇综述中，作者比较系统的讲了下网络流量、光学&#x2F;热成像、EMR电磁辐射检测摄像头的方法，以及通过机器学习以及多种方式结合进一步增强效果的展望。  <a href="https://ieeexplore.ieee.org/document/11343822">Hidden Camera Detection in Smart Environments: A Comprehensive Survey of Current Methods, Challenges, and Future Perspectives</a></p>
+<h2 id="复刻与测试"><a href="#复刻与测试" class="headerlink" title="复刻与测试"></a>复刻与测试</h2><p>首先掏出Airspy mini+一个20db的LNA+一根拉杆天线。 直接观测几个摄像头在上电状态下在刚才分析的24MHz、27MHz高次谐波频率附近是否存在泄露的信号峰。</p>
+<p>找的手边第一个摄像头就发现了明显的信号峰：</p>
+<p><img src="https://pic.leommxj.com/blog/camfinder/cam_on_sdrsharp.png" alt="cam_on_sdrsharp"></p>
+<p>拔电源后几秒的样子：</p>
+<p><img src="https://pic.leommxj.com/blog/camfinder/cam_off_sdrsharp.png" alt="cam_off_sdrsharp"></p>
+<p>并且在相关间隔频率也能找到对应的泄露信号。 确认了思路可行后vibe一套可以通过配置设定几乎所有参数（扫描频率组、fft参数、跳频扫描参数、达标分数阈值等）的工具（链接在结尾）</p>
+<p>我使用airspy检测24MHz与27MHz间隔组泄露的示例配置如下:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">name</span> <span class="string">=</span> <span class="string">&quot;best_high_airspy&quot;</span></span><br><span class="line"><span class="string">offset_model</span> <span class="string">=</span> <span class="string">&quot;ppm&quot;</span></span><br><span class="line"><span class="string">min_hits</span> <span class="string">=</span> <span class="number">3</span></span><br><span class="line"><span class="string">min_score</span> <span class="string">=</span> <span class="number">20.0</span></span><br><span class="line"><span class="string">max_offset_spread_hz</span> <span class="string">=</span> <span class="number">1200.0</span></span><br><span class="line"></span><br><span class="line">[[<span class="string">groups</span>]]</span><br><span class="line"><span class="string">name</span> <span class="string">=</span> <span class="string">&quot;24mhz&quot;</span></span><br><span class="line"><span class="string">freqs_mhz</span> <span class="string">=</span> [<span class="number">792.0</span>, <span class="number">816.0</span>, <span class="number">840.0</span>, <span class="number">864.0</span>]</span><br><span class="line"></span><br><span class="line">[[<span class="string">groups</span>]]</span><br><span class="line"><span class="string">name</span> <span class="string">=</span> <span class="string">&quot;27mhz&quot;</span></span><br><span class="line"><span class="string">freqs_mhz</span> <span class="string">=</span> [<span class="number">810.0</span>, <span class="number">864.0</span>, <span class="number">918.0</span>, <span class="number">945.0</span>]</span><br><span class="line"></span><br><span class="line">[<span class="string">scan</span>]</span><br><span class="line"><span class="string">peak_search_window_hz</span> <span class="string">=</span> <span class="number">250000.0</span></span><br><span class="line"><span class="string">min_peak_snr_db</span> <span class="string">=</span> <span class="number">4.0</span></span><br><span class="line"><span class="string">max_peaks_per_freq</span> <span class="string">=</span> <span class="number">12</span></span><br><span class="line"><span class="string">record_spectrum_bins</span> <span class="string">=</span> <span class="number">128</span></span><br><span class="line"><span class="string">record_band_decimation</span> <span class="string">=</span> <span class="number">1</span></span><br><span class="line"><span class="string">output</span> <span class="string">=</span> <span class="string">&quot;tui&quot;</span></span><br><span class="line"></span><br><span class="line">[<span class="string">device</span>]</span><br><span class="line"><span class="string">backend</span> <span class="string">=</span> <span class="string">&quot;airspy&quot;</span></span><br><span class="line"></span><br><span class="line">[<span class="string">device.airspy</span>]</span><br><span class="line"><span class="string">device_index</span> <span class="string">=</span> <span class="number">0</span></span><br><span class="line"><span class="string">sample_rate_hz</span> <span class="string">=</span> <span class="number">3000000</span></span><br><span class="line"><span class="string">dwell_ms</span> <span class="string">=</span> <span class="number">300</span></span><br><span class="line"><span class="string">fft_size</span> <span class="string">=</span> <span class="number">65536</span></span><br><span class="line"><span class="string">dc_notch_hz</span> <span class="string">=</span> <span class="number">2000.0</span></span><br><span class="line"><span class="string">settle_ms</span> <span class="string">=</span> <span class="number">40</span></span><br><span class="line"></span><br><span class="line">[<span class="string">device.airspy.gain</span>]</span><br><span class="line"><span class="string">mode</span> <span class="string">=</span> <span class="string">&quot;manual&quot;</span></span><br><span class="line"><span class="string">preset</span> <span class="string">=</span> <span class="number">18</span></span><br><span class="line"><span class="string">lna</span> <span class="string">=</span> <span class="number">15</span></span><br><span class="line"><span class="string">mixer</span> <span class="string">=</span> <span class="number">15</span></span><br><span class="line"><span class="string">vga</span> <span class="string">=</span> <span class="number">2</span></span><br><span class="line"><span class="string">lna_agc</span> <span class="string">=</span> <span class="literal">false</span></span><br><span class="line"><span class="string">mixer_agc</span> <span class="string">=</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+<p><code>cargo run -- scan --profile profiles/best_high_airspy.toml</code> 启动下图的界面:</p>
+<p><img src="https://pic.leommxj.com/blog/camfinder/camfinder.png" alt="camfinder"></p>
+<p>图里+21ppm的疑似目标是我环境中某个一直存在的干扰。 -25ppm的是一个天地伟业的poe监控摄像头，也就是下文的CAM1(这里也能看出来频率的漂移，这个摄像头在运行一段时间后基本会稳定在-30ppm左右)。</p>
+<p>后续对手边的一些摄像头进行了测试，泄露最严重的能在3m开外检测到，而有部分设备的有效检测距离只有不到30cm。当然我的两个测试环境都无法屏蔽外界射频信号，能明显感受到其他通信信号的干扰。环境a中837MHz附近基本不可用，有大量信号，而在环境b中则非常干净，是很好的泄露检测频段。</p>
+<p>过程中观测到同设备同间隔组(比如27Mhz)上的泄露频率<strong>波动其实很频繁</strong>，也就是偏移频率会不断变动。不同频段的偏移也不完全一致且不断波动，距离、位置、朝向都会有明显变化。 中间推测可能用ppm会好一些，加入了ppm而不是hz的聚类模式，但最终观测下来未发现明显优于hz的表现。</p>
+<p>主要测试的几个摄像头: </p>
+<p><img src="https://pic.leommxj.com/blog/camfinder/7cam_1.jpg" alt="7cam_1"></p>
+<p><img src="https://pic.leommxj.com/blog/camfinder/7cam_2.jpg" alt="7cam_2"></p>
+<p>以及一个懒得拍照的TP-Link家用摄像头，称为7。下面是测试过程中的表现记录(仅供参考，许多变数)：</p>
+<ul>
+<li>CAM1 -30ppm(27M) 1m时100分</li>
+<li>CAM2 +67ppm(24M&#x2F;27M) 24M时0.5m190分 27M只有60</li>
+<li>CAM3 +10ppm(27M&#x2F;24M) 24M表现好1m80分，27M&gt;50cm丢一个泄露频点</li>
+<li>CAM4  -27ppm(24M) 激活后才有，取消激活不会消失 1M 100多。 另外有+10ppm，激活后有，偏弱。 激活后再取消激活后还会多出-27ppm(27M)</li>
+<li>CAM5 这个是25M晶振 25M的泄露，启动后从-6慢慢漂移到-12左右稳定。 0.4m 130左右score。</li>
+<li>CAM6 +14ppm(24M) 0.5m 80分</li>
+<li>CAM7 -16ppm(27MHz) 靠近10cm左右才有</li>
+</ul>
+<p>这里有两个比较特殊的目标，一个是cam4 一个usb的摄像头，并不独立运作，测试中发现使用主机激活摄像头后才开始出现电磁泄漏，但是关闭并不会消失，而且有多个泄露。</p>
+<p>cam5是一个pizero用的摄像头，最初使用检测其他摄像头的24MHz&#x2F;27MHz间隔组没有成功检测到，查看镜头组附近的晶振发现是25MHz的，遂切换25MHz的间隔组，成功检测到泄露， 这也证明了24&#x2F;27MHz显然不能覆盖所有常见摄像头种类。</p>
+<p><img src="https://pic.leommxj.com/blog/camfinder/25mhz.JPG" alt="25mhz"></p>
+<p>另外还测试了三个设备:</p>
+<p><img src="https://pic.leommxj.com/blog/camfinder/other3.jpg" alt="other3"></p>
+<p>Pocket4 用当前的方案检测不到，但是其实不是完全没有泄露，人工搜寻可以发现: 918.525MHz存在较强泄露 40cm可侦测 854.013也有。 但是可以看到这两个频率本身就不太有相关性，更没有以固定间隔组的形式出现。</p>
+<p>Nikon Z6微单与SONY的ICD-PX470录音笔都没有观测到可辨识的泄露信号峰。</p>
+<p>尝试使用了：做EMC检测的近场探头、指向性强的对数周期天线、有源小环天线，没有发现距离和信号强度优势，个人认为主要决定检测距离和检测效果的还是摄像头自身的泄露情况。</p>
+<h2 id="结尾"><a href="#结尾" class="headerlink" title="结尾"></a>结尾</h2><p>整个分析与复现过程我都没有接触过实际的DF10设备，所以对具体电路+FPGA+射频前端部分一无所知，对真实设备的效果不做任何预估。</p>
+<p>复刻的过程中可以发现<strong>通过晶振谐波电磁泄漏检测</strong>是有效果的，但绝对不是Silver Bullet。 能否检测与许多内容强依赖，设备也有比较简单的方法来避免发生电磁泄漏:</p>
+<ul>
+<li>目标本身的构造，比如是否具有<strong>屏蔽罩</strong>，使用的<strong>晶振频率</strong>，外壳材质，内部走线方式，供电的电源等 (<strong>最主要</strong>)</li>
+<li>目标和检测设备&#x2F;天线的位置、朝向、距离等</li>
+<li>非摄像头也可能存在此类电磁泄露</li>
+</ul>
+<p>我使用的设备是airspy mini + 20db LNA(Zenkoo的ZK06-BM&#x2F;研新电子的20dB) + 几种天线 。 其中<strong>LNA可以认为是必须的</strong>，测试单独使用b210&#x2F;Airspy mini都不能有效的捕获泄露信号。</p>
+<p>此方案有许多可能的优化空间本次没有探索，比如前文引用论文中提到的： <strong>灯光闪烁引起泄露变化</strong>、<strong>FM&#x2F;AM调制后分析</strong>、<strong>DDR内存读写泄露</strong>以及<strong>优化射频前端</strong>等等。</p>
+<p>工具链接: <a href="https://github.com/leommxj/camfinder">https://github.com/leommxj/camfinder</a> 。 实际效果主要看profile内的配置。目前支持airspy&#x2F;soapy两种backend。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%8F%8D%E5%81%B7%E6%8B%8D/" rel="tag"># 反偷拍</a>
+              <a href="/tags/%E7%94%B5%E7%A3%81%E6%B3%84%E6%BC%8F/" rel="tag"># 电磁泄漏</a>
+              <a href="/tags/RF/" rel="tag"># RF</a>
+              <a href="/tags/camfinder/" rel="tag"># camfinder</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/04/24/kicad-mcp-agent-route-test/" rel="prev" title="KiCad mcp 智能体布线测试">
+                  <i class="fa fa-angle-left"></i> KiCad mcp 智能体布线测试
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">leommxj</span>
+  </div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
